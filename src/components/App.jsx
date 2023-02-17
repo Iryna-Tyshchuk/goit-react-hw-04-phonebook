@@ -1,74 +1,88 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
-import ContactForm from './ContactForm.jsx/ContactForm';
+import { ContactForm } from './ContactForm.jsx/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
 import { GlobalStyle } from '../GlobalStyle';
+import { useLocalStorage } from 'hooks/useLocalStorage';
 
-export default class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
-  addContact = data => {
-    if (
-      this.state.contacts.some(
-        c => c.name.toLowerCase().trim() === data.name.toLowerCase().trim()
-      )
-    ) {
-      alert(`Contact ${data.name} is already exists!`);
-      return;
+export function App() {
+  const [contacts, setContacts] = useLocalStorage('contacts', []);
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    const stringifiedContacts = JSON.stringify(contacts);
+
+    localStorage.setItem('contacts', stringifiedContacts);
+  }, [contacts]);
+
+  const addContact = contact => {
+    const isInContacts = contacts.some(
+      ({ name }) => name.toLowerCase() === contact.name.toLowerCase()
+    );
+
+    if (isInContacts) {
+      alert(`Contact ${contact.name} is already exists!`);
+      return false;
     }
+
     const newContact = {
-      ...data,
+      ...contact,
       id: nanoid(),
     };
+    setContacts(prevContacts => {
+      return [...prevContacts, newContact];
+    });
 
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-    }));
+    return true;
   };
-  deleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(({ id }) => id !== contactId),
-    }));
-  };
-  handleFilter = ({ target: { value } }) => {
-    this.setState({
-      filter: value,
+
+  const deleteContact = contactId => {
+    setContacts(prevContacts => {
+      return prevContacts.filter(({ id }) => id !== contactId);
     });
   };
 
-  render() {
-    const { contacts, filter } = this.state;
-    const filteredContacts = contacts.filter(contact =>
-      contact.name.toLowerCase().trim().includes(filter.toLowerCase())
-    );
-    return (
-      <div
-        style={{
-          height: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontSize: 40,
-          color: '#010101',
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: '32px' }}>Phone book</h1>
-          <ContactForm addContact={this.addContact} />
+  const handleFilter = ({ target: { value } }) => {
+    setFilter(value);
+  };
 
-          <h2 style={{ fontSize: '32px' }}>Contacts</h2>
-          <Filter onFilterChange={this.handleFilter} value={filter} />
-          <ContactList
-            contacts={filteredContacts}
-            deleteContact={this.deleteContact}
-          />
-        </div>
-        <GlobalStyle />
-      </div>
+  const filteredContacts = () => {
+    return contacts.filter(({ name }) =>
+      name.toLowerCase().trim().includes(filter.toLowerCase())
     );
-  }
+  };
+
+  return (
+    <div
+      style={{
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: 40,
+        color: '#010101',
+      }}
+    >
+      <div>
+        <h1 style={{ fontSize: '32px' }}>Phone book</h1>
+        <ContactForm addContact={addContact} />
+
+        <h2 style={{ fontSize: '32px' }}>Contacts</h2>
+
+        {contacts.length !== 0 ? (
+          <>
+            <Filter onFilterChange={handleFilter} value={filter} />
+            <ContactList
+              contacts={filteredContacts()}
+              deleteContact={deleteContact}
+            />
+          </>
+        ) : (
+          <p>You haven't any contacts</p>
+        )}
+      </div>
+      <GlobalStyle />
+    </div>
+  );
 }
-// чи правильо тут підключені глобальні стилі?

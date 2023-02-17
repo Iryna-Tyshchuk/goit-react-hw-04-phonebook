@@ -2,8 +2,10 @@ import styled from 'styled-components';
 
 export const Button = styled.button`
   text-transform: capitalize;
-  display: inline-flex;
+  width: 150px;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: ${p => p.theme.space[2]}px;
   margin: ${p => p.theme.space[0]};
   padding-top: ${p => p.theme.space[3]}px;
