@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { nanoid } from 'nanoid';
 import { ContactForm } from './ContactForm.jsx/ContactForm';
 import { ContactList } from './ContactList/ContactList';
@@ -9,12 +9,6 @@ import { useLocalStorage } from 'hooks/useLocalStorage';
 export function App() {
   const [contacts, setContacts] = useLocalStorage('contacts', []);
   const [filter, setFilter] = useState('');
-
-  useEffect(() => {
-    const stringifiedContacts = JSON.stringify(contacts);
-
-    localStorage.setItem('contacts', stringifiedContacts);
-  }, [contacts]);
 
   const addContact = contact => {
     const isInContacts = contacts.some(
